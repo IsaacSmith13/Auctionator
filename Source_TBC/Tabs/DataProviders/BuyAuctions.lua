@@ -191,6 +191,9 @@ function AuctionatorBuyAuctionsDataProviderMixin:PopulateAuctions()
       if owner and string.find(owner, NAME_PREFIX, 1, true) then
         newEntry.isOwned = true
         newEntry.isOwnedText = string.upper(string.sub(owner, string.len(NAME_PREFIX) + 1, string.len(NAME_PREFIX) + 1)) .. string.sub(owner, string.len(NAME_PREFIX) + 2)
+      elseif owner == "Grungjr" or owner == "Lacerator" then
+        newEntry.isOwned = true
+        newEntry.isOwnedText = "Lac"
       else
         newEntry.isOwnedText = ""
       end
