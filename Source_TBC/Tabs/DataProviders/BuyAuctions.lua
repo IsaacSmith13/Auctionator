@@ -37,6 +37,8 @@ local BUY_EVENTS = {
   Auctionator.AH.Events.ScanAborted,
 }
 
+local NAME_PREFIX = "Rolling"
+
 AuctionatorBuyAuctionsDataProviderMixin = CreateFromMixins(AuctionatorDataProviderMixin)
 
 function AuctionatorBuyAuctionsDataProviderMixin:OnLoad()
@@ -160,13 +162,14 @@ function AuctionatorBuyAuctionsDataProviderMixin:PopulateAuctions()
 
   local results = {}
   for _, auction in ipairs(self.allAuctions) do
+    local owner = auction.info[Auctionator.Constants.AuctionItemInfo.Owner]
     local newEntry = {
       itemLink = auction.itemLink,
       unitPrice = Auctionator.Utilities.ToUnitPrice(auction),
       stackPrice = auction.info[Auctionator.Constants.AuctionItemInfo.Buyout],
       stackSize = auction.info[Auctionator.Constants.AuctionItemInfo.Quantity],
       numStacks = 1,
-      isOwned = auction.info[Auctionator.Constants.AuctionItemInfo.Owner] == (GetUnitName("player")),
+      isOwned = owner == (GetUnitName("player")),
       bidAmount = auction.info[Auctionator.Constants.AuctionItemInfo.BidAmount],
       isSelected = false, --Used by rows to determine highlight
       notReady = true,
@@ -185,14 +188,19 @@ function AuctionatorBuyAuctionsDataProviderMixin:PopulateAuctions()
     if newEntry.isOwned then
       newEntry.isOwnedText = AUCTIONATOR_L_UNDERCUT_YES
     else
-      newEntry.isOwnedText = ""
+      if owner and string.find(owner, NAME_PREFIX, 1, true) then
+        newEntry.isOwned = true
+        newEntry.isOwnedText = string.upper(string.sub(owner, string.len(NAME_PREFIX) + 1, string.len(NAME_PREFIX) + 1)) .. string.sub(owner, string.len(NAME_PREFIX) + 2)
+      else
+        newEntry.isOwnedText = ""
+      end
     end
     Auctionator.Utilities.SetStacksText(newEntry)
 
     local prevResult = results[#results] or {}
     if prevResult.unitPrice == newEntry.unitPrice and
        prevResult.stackSize == newEntry.stackSize and
-       prevResult.itemLink == newEntry.itemLink and 
+       prevResult.itemLink == newEntry.itemLink and
        prevResult.isOwned == newEntry.isOwned and
        (prevResult.bidAmount == newEntry.bidAmount or prevResult.unitPrice == nil) then
       prevResult.numStacks = prevResult.numStacks + 1
